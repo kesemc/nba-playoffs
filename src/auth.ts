@@ -1,6 +1,6 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import Resend from "next-auth/providers/resend";
+import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/db";
 import { isEmailAllowed } from "@/lib/email-allow-list";
 
@@ -19,77 +19,26 @@ declare module "next-auth" {
   }
 }
 
-// ---- Helpers ---------------------------------------------------------------
-function isDevResendKey(key: string | undefined): boolean {
-  if (!key) return true;
-  if (key.length === 0) return true;
-  if (key.startsWith("re_dev_")) return true;
-  return false;
-}
-
 // ---- NextAuth config -------------------------------------------------------
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "database" },
   pages: {
     signIn: "/sign-in",
-    verifyRequest: "/sign-in/check-email",
-    // Defense-in-depth: if the allow-list is changed between link-send and
-    // link-click (removed email), the callback-level check rejects and we
-    // send the user back to the styled sign-in page with a clear error
-    // instead of NextAuth's default unstyled /api/auth/error screen.
+    // Route any provider-level error (access denied, OAuth callback failure,
+    // etc.) back to our styled sign-in page instead of NextAuth's default
+    // unstyled /api/auth/error screen.
     error: "/sign-in",
   },
   providers: [
-    Resend({
-      apiKey: process.env.AUTH_RESEND_KEY,
-      from: process.env.AUTH_EMAIL_FROM,
-      // Dev fallback: if no real Resend key is configured, log the magic-link
-      // URL to stdout so you can click it without setting up email.
-      sendVerificationRequest: async ({ identifier, url, provider }) => {
-        if (isDevResendKey(process.env.AUTH_RESEND_KEY)) {
-          console.log(
-            [
-              "",
-              "==========================================================",
-              "  [auth] No Resend key configured — magic link below:",
-              `  to:   ${identifier}`,
-              `  link: ${url}`,
-              "==========================================================",
-              "",
-            ].join("\n"),
-          );
-          return;
-        }
-
-        const { host } = new URL(url);
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${process.env.AUTH_RESEND_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: provider.from,
-            to: identifier,
-            subject: `Sign in to NBA Playoffs Pool`,
-            text: `Sign in to NBA Playoffs Pool at ${host}\n\n${url}\n\nIf you did not request this email you can safely ignore it.`,
-            html: `
-              <div style="font-family: system-ui, sans-serif; max-width: 520px; margin: auto; padding: 24px;">
-                <h2 style="margin: 0 0 16px;">Sign in to NBA Playoffs Pool</h2>
-                <p>Click the button below to sign in on <b>${host}</b>. This link will expire in 24 hours.</p>
-                <p style="margin: 24px 0;">
-                  <a href="${url}" style="background:#111; color:#fff; padding:12px 20px; border-radius:8px; text-decoration:none; display:inline-block;">Sign in</a>
-                </p>
-                <p style="color:#666; font-size:12px;">If you did not request this email you can safely ignore it.</p>
-              </div>`,
-          }),
-        });
-        if (!res.ok) {
-          const body = await res.text().catch(() => "<unreadable>");
-          throw new Error(`Resend send failed (${res.status}): ${body}`);
-        }
-      },
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Safe to enable here: Google verifies the emails it returns, so we
+      // can link a fresh Google OAuth account to an existing User row (e.g.
+      // a user who originally signed in with the old magic-link provider)
+      // without risking spoofed-email account hijacking.
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   callbacks: {
