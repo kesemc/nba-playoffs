@@ -58,9 +58,13 @@ export const CreateSeriesInput = z
   });
 export type CreateSeriesInput = z.infer<typeof CreateSeriesInput>;
 
-export const UpdateSeriesOddsInput = z.object({
+export const UpdateSeriesInput = z.object({
   seriesId: z.string().min(1),
   odds: OddsGrid,
+  // Optional on edit: only provided when the admin chose to change the lock.
+  // We intentionally allow past values so admins can correct a bad lockTime
+  // even after tipoff (e.g. timezone mistake).
+  lockTime: z.coerce.date().optional(),
 });
 
 export const EnterResultInput = z.object({

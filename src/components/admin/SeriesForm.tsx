@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { NBA_TEAMS, ROUNDS, ROUND_LABELS } from "@/lib/teams";
-import { createSeries, updateSeriesOdds } from "@/actions/series";
+import { createSeries, updateSeries } from "@/actions/series";
 import {
   formatIsraelDateTime,
   israelWallclockToUtc,
@@ -76,12 +76,13 @@ export default function SeriesForm(props: Props) {
       fd.set("round", round);
       fd.set("teamA", teamA);
       fd.set("teamB", teamB);
-      try {
-        fd.set("lockTime", israelWallclockToUtc(lockTime).toISOString());
-      } catch {
-        setError("Please pick a valid lock date and time.");
-        return;
-      }
+    }
+    // Lock time is editable in both modes; convert Israel-wallclock to UTC ISO.
+    try {
+      fd.set("lockTime", israelWallclockToUtc(lockTime).toISOString());
+    } catch {
+      setError("Please pick a valid lock date and time.");
+      return;
     }
     if (isEdit) {
       fd.set("seriesId", props.seriesId);
@@ -89,7 +90,7 @@ export default function SeriesForm(props: Props) {
 
     startTransition(async () => {
       const res = isEdit
-        ? await updateSeriesOdds(fd)
+        ? await updateSeries(fd)
         : await createSeries(fd);
       if (!res.ok) {
         setError(res.error);
@@ -102,6 +103,34 @@ export default function SeriesForm(props: Props) {
       }
     });
   }
+
+  const lockTimeField = (
+    <label className="block text-sm">
+      <span className="mb-1 block font-medium">
+        Lock time (Game 1 tipoff){" "}
+        <span className="text-xs font-normal text-neutral-500">
+          — Israel time (Asia/Jerusalem)
+        </span>
+      </span>
+      <input
+        type="datetime-local"
+        value={lockTime}
+        onChange={(e) => setLockTime(e.target.value)}
+        className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+        required
+      />
+      <span className="mt-1 block text-xs text-neutral-500">
+        Enter the hour as you would read it on a clock in Israel.
+        {isEdit ? (
+          <>
+            {" "}
+            Originally locked at{" "}
+            <b>{formatIsraelDateTime(new Date(props.lockTime))}</b>.
+          </>
+        ) : null}
+      </span>
+    </label>
+  );
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -160,30 +189,16 @@ export default function SeriesForm(props: Props) {
             </label>
           </div>
 
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">
-              Lock time (Game 1 tipoff){" "}
-              <span className="text-xs font-normal text-neutral-500">
-                — Israel time (Asia/Jerusalem)
-              </span>
-            </span>
-            <input
-              type="datetime-local"
-              value={lockTime}
-              onChange={(e) => setLockTime(e.target.value)}
-              className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-              required
-            />
-            <span className="mt-1 block text-xs text-neutral-500">
-              Enter the hour as you would read it on a clock in Israel.
-            </span>
-          </label>
+          {lockTimeField}
         </>
       ) : (
-        <div className="rounded-md bg-neutral-100 px-3 py-2 text-sm dark:bg-neutral-900">
-          Editing odds for <b>{props.teamA}</b> vs <b>{props.teamB}</b> · locks{" "}
-          {formatIsraelDateTime(new Date(props.lockTime))}
-        </div>
+        <>
+          <div className="rounded-md bg-neutral-100 px-3 py-2 text-sm dark:bg-neutral-900">
+            Editing <b>{props.teamA}</b> vs <b>{props.teamB}</b> ·{" "}
+            {ROUND_LABELS[props.round as keyof typeof ROUND_LABELS] ?? props.round}
+          </div>
+          {lockTimeField}
+        </>
       )}
 
       {/* Odds grid */}
@@ -262,7 +277,7 @@ export default function SeriesForm(props: Props) {
         {pending
           ? "Saving…"
           : isEdit
-            ? "Save odds"
+            ? "Save changes"
             : "Create series"}
       </button>
     </form>

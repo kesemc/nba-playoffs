@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/auth-helpers";
 import {
   CreateSeriesInput,
   EnterResultInput,
-  UpdateSeriesOddsInput,
+  UpdateSeriesInput,
   type OddsGrid,
 } from "@/lib/zod-schemas";
 import type { Prisma } from "@prisma/client";
@@ -84,14 +84,18 @@ export async function createSeries(
   return { ok: true, data: { id: series.id } };
 }
 
-export async function updateSeriesOdds(
+export async function updateSeries(
   formData: FormData,
 ): Promise<ActionResult<null>> {
   await requireAdmin();
 
-  const parsed = UpdateSeriesOddsInput.safeParse({
+  const rawLockTime = formData.get("lockTime");
+  const parsed = UpdateSeriesInput.safeParse({
     seriesId: formData.get("seriesId"),
     odds: parseOddsGridFromForm(formData),
+    // Only forward lockTime if the client sent it; otherwise leave undefined
+    // so the schema treats it as "no change".
+    lockTime: rawLockTime && String(rawLockTime).length > 0 ? rawLockTime : undefined,
   });
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -103,6 +107,12 @@ export async function updateSeriesOdds(
   if (!series) return { ok: false, error: "Series not found" };
 
   await prisma.$transaction(async (tx) => {
+    if (parsed.data.lockTime) {
+      await tx.series.update({
+        where: { id: series.id },
+        data: { lockTime: parsed.data.lockTime },
+      });
+    }
     await tx.seriesOdds.deleteMany({ where: { seriesId: series.id } });
     await tx.seriesOdds.createMany({
       data: oddsRowsFor(series.id, series.teamA, series.teamB, parsed.data.odds),

@@ -52,7 +52,7 @@ export default async function AdminSeriesDetailPage({
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Odds</h2>
+        <h2 className="text-lg font-semibold">Series details &amp; odds</h2>
         <SeriesForm
           mode="edit-odds"
           seriesId={s.id}
