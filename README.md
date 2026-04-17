@@ -23,9 +23,7 @@ Odds are frozen by the admin at the moment the series is created (10 values: 2 w
 ## Stack
 
 - Next.js 14 (App Router) + TypeScript + Tailwind
-- Prisma ORM
-  - Local dev: **SQLite** (zero install)
-  - Production: **Postgres** (Neon free tier) — schema is kept Postgres-compatible
+- Prisma ORM over **Postgres** (Neon free tier) for both local dev and production
 - NextAuth v5 with Resend magic-link email auth
 - Zod for input validation
 - SWR for leaderboard polling
@@ -35,8 +33,8 @@ Odds are frozen by the admin at the moment the series is created (10 values: 2 w
 
 ```bash
 npm install
-cp .env.example .env.local        # fill in values
-npm run prisma:migrate            # creates prisma/dev.db
+cp .env.example .env              # fill in DATABASE_URL + AUTH_* values
+npm run prisma:migrate            # applies migrations to Neon
 npm run db:seed                   # optional demo data
 npm run dev
 ```
@@ -47,11 +45,11 @@ Visit http://localhost:3000.
 
 See `.env.example`. Required:
 
-- `DATABASE_URL` — `file:./dev.db` locally; Neon Postgres URL in prod
-- `NEXTAUTH_URL` — `http://localhost:3000` locally; prod URL in prod
-- `NEXTAUTH_SECRET` — any long random string (use `openssl rand -base64 32`)
+- `DATABASE_URL` — Neon Postgres connection string
+- `AUTH_URL` — `http://localhost:3000` locally; prod URL in prod
+- `AUTH_SECRET` — any long random string (`openssl rand -base64 32`)
 - `AUTH_RESEND_KEY` — Resend API key for sending magic-link emails
-- `AUTH_EMAIL_FROM` — the "from" address (must be a verified domain in Resend, or use `onboarding@resend.dev` for testing)
+- `AUTH_EMAIL_FROM` — "from" address (verified domain in Resend, or `onboarding@resend.dev` for quick testing)
 - `ALLOWED_EMAILS` — comma-separated allow-list so only your friends can sign up
 
 ## Deployment
@@ -60,7 +58,8 @@ See `.env.example`. Required:
 - **Database**: Neon Postgres (free tier)
 - **Email**: Resend (free tier)
 
-Before first production deploy we swap the Prisma provider from `sqlite` to `postgresql` and regenerate migrations — the schema is simple enough that this is straightforward.
+Set `DATABASE_URL`, `AUTH_URL`, `AUTH_SECRET`, `AUTH_RESEND_KEY`,
+`AUTH_EMAIL_FROM`, and `ALLOWED_EMAILS` as Vercel project env vars.
 
 ## Project layout
 
