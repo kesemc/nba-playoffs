@@ -6,7 +6,7 @@ async function sendMagicLink(formData: FormData) {
   if (!email) return;
   await signIn("resend", {
     email,
-    redirectTo: "/dashboard",
+    redirectTo: "/",
   });
 }
 
