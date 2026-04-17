@@ -1,15 +1,13 @@
 // Playoffs pool — data model
 //
-// For local dev we use SQLite (`file:./dev.db`). Before prod deploy we swap
-// `provider = "sqlite"` to `"postgresql"` and regenerate migrations.
-// The schema below uses only portable column types to make that swap clean.
+// Postgres (Neon) in both local dev and production, one source of truth.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
