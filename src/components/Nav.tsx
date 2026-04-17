@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { currentUser } from "@/lib/auth-helpers";
 import { signOutAction } from "@/actions/auth";
+import NavLink from "@/components/NavLink";
 
 export default async function Nav() {
   const user = await currentUser();
@@ -8,22 +9,19 @@ export default async function Nav() {
   return (
     <nav className="border-b border-neutral-200 dark:border-neutral-800">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3 text-sm">
-        <div className="flex items-center gap-5">
-          <Link href="/" className="font-semibold tracking-tight">
+        <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="mr-3 font-semibold tracking-tight text-neutral-900 dark:text-white"
+          >
             NBA Playoffs Pool
           </Link>
           {user ? (
             <>
-              <Link href="/" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                Dashboard
-              </Link>
-              <Link href="/leaderboard" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                Leaderboard
-              </Link>
+              <NavLink href="/" label="Dashboard" />
+              <NavLink href="/leaderboard" label="Leaderboard" />
               {user.isAdmin ? (
-                <Link href="/admin/series" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white">
-                  Admin
-                </Link>
+                <NavLink href="/admin" label="Admin" matchPrefix />
               ) : null}
             </>
           ) : null}
