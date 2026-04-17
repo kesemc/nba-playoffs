@@ -2,6 +2,7 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Resend from "next-auth/providers/resend";
 import { prisma } from "@/lib/db";
+import { isEmailAllowed } from "@/lib/email-allow-list";
 
 // ---- Session typing augmentation ------------------------------------------
 // Extend the default session shape so `session.user.id` and `.isAdmin` are typed.
@@ -19,20 +20,6 @@ declare module "next-auth" {
 }
 
 // ---- Helpers ---------------------------------------------------------------
-function normalizeEmail(e: string): string {
-  return e.trim().toLowerCase();
-}
-
-function allowList(): Set<string> {
-  const raw = process.env.ALLOWED_EMAILS ?? "";
-  return new Set(
-    raw
-      .split(",")
-      .map((s) => normalizeEmail(s))
-      .filter((s) => s.length > 0),
-  );
-}
-
 function isDevResendKey(key: string | undefined): boolean {
   if (!key) return true;
   if (key.length === 0) return true;
@@ -47,6 +34,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/sign-in",
     verifyRequest: "/sign-in/check-email",
+    // Defense-in-depth: if the allow-list is changed between link-send and
+    // link-click (removed email), the callback-level check rejects and we
+    // send the user back to the styled sign-in page with a clear error
+    // instead of NextAuth's default unstyled /api/auth/error screen.
+    error: "/sign-in",
   },
   providers: [
     Resend({
@@ -102,12 +94,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      const email = user.email ? normalizeEmail(user.email) : null;
-      if (!email) return false;
-
-      const list = allowList();
-      if (list.size > 0 && !list.has(email)) {
-        console.warn(`[auth] Sign-in denied for ${email} (not in ALLOWED_EMAILS)`);
+      if (!isEmailAllowed(user.email ?? null)) {
+        console.warn(
+          `[auth] Sign-in denied for ${user.email} (not in ALLOWED_EMAILS)`,
+        );
         return false;
       }
       return true;

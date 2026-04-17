@@ -65,6 +65,7 @@ See `.env.example`. Required:
 - `AUTH_RESEND_KEY` — Resend API key for sending magic-link emails
 - `AUTH_EMAIL_FROM` — "from" address (verified domain in Resend, or `onboarding@resend.dev` for quick testing)
 - `ALLOWED_EMAILS` — comma-separated allow-list so only your friends can sign up
+- `POOL_ADMIN_CONTACT` — *(optional)* displayed to rejected sign-in attempts so they know how to reach you (email, phone, Telegram handle, etc.)
 
 Optional (prize pool display — set to enable the pot card on the dashboard):
 
