@@ -20,22 +20,15 @@ const oddsValue = z
   .gt(1, "Odds must be greater than 1.0");
 
 /**
- * 10-cell odds grid for a series:
- *   - winnerA, winnerB     (games = null)
- *   - teamA in 4/5/6/7
- *   - teamB in 4/5/6/7
+ * Odds grid for a series — only the 2 winner-to-win-series values.
+ *
+ * The scoring rule is: winner_odds (wrong games) or winner_odds + flat bonus
+ * (exact games), so exact-score odds are not needed for the payout. Admins
+ * just enter bet365's "team to win series" decimal odds for each side.
  */
 export const OddsGrid = z.object({
   winnerA: oddsValue,
   winnerB: oddsValue,
-  a4: oddsValue,
-  a5: oddsValue,
-  a6: oddsValue,
-  a7: oddsValue,
-  b4: oddsValue,
-  b5: oddsValue,
-  b6: oddsValue,
-  b7: oddsValue,
 });
 export type OddsGrid = z.infer<typeof OddsGrid>;
 

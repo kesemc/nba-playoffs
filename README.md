@@ -7,13 +7,27 @@ A small, private web app where a group of friends (≤10) submit per-series NBA 
 
 Let the real result be `winner` in `N` games. For each user's pick `(team, games)`:
 
-| Condition                                    | Points                          |
-| -------------------------------------------- | ------------------------------- |
-| `team != winner`                             | **0**                           |
-| `team == winner` and `games != N`            | **winner-only odds** (e.g. 1.5) |
-| `team == winner` and `games == N`            | **exact-score odds** (e.g. 5.7) |
+| Condition                                    | Points                               |
+| -------------------------------------------- | ------------------------------------ |
+| `team != winner`                             | **0**                                |
+| `team == winner` and `games != N`            | **winner-only odds** (e.g. 1.5)      |
+| `team == winner` and `games == N`            | **winner-only odds + 3 bonus**       |
 
-Odds are frozen by the admin at the moment the series is created (10 values: 2 winner-only + 8 exact-score).
+Odds are frozen by the admin when the series is created (2 values: decimal "to win series" odds for each team).
+
+### Why a flat +3 instead of bet365 exact-score odds?
+
+Early simulation against last year's playoffs (see `scripts/simulate-scoring.ts`) showed that
+using bet365 exact-score odds directly (values ranging 4–30+) creates runaway variance: one
+lucky exact-score call can dominate a 15-series tournament, overshadowing consistent skill.
+
+The flat `+3` bonus preserves the upset incentive — picking a cinderella at 8.0 odds still pays
+way more than picking a 1.5 favorite — while capping how much any single series can swing the
+standings. Under simulation, this cut the score spread roughly in half (range 47 → 30) without
+killing motivation to call underdog series.
+
+The constant lives in [`src/lib/scoring.ts`](src/lib/scoring.ts) as `EXACT_GAMES_BONUS` if you
+ever want to tweak it.
 
 ## Pick lifecycle
 

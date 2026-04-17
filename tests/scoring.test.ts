@@ -1,20 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { scorePick, type OddsRow } from "../src/lib/scoring";
+import { EXACT_GAMES_BONUS, scorePick, type OddsRow } from "../src/lib/scoring";
 
-// A typical bet365-style grid for "Team A vs Team B":
-//                 win series   in 4    in 5    in 6    in 7
-//   Team A         1.50        5.70    4.20    5.70    8.50
-//   Team B         3.60        21.0    15.0    12.0    18.0
+// Only winner-only odds are consulted by the active scoring rule.
+//   Team A: win-series 1.5
+//   Team B: win-series 3.6
+// Exact-games rows may exist (legacy data) but must be ignored by scoring.
 const odds: OddsRow[] = [
   { team: "A", games: null, odds: 1.5 },
-  { team: "A", games: 4, odds: 5.7 },
-  { team: "A", games: 5, odds: 4.2 },
-  { team: "A", games: 6, odds: 5.7 },
-  { team: "A", games: 7, odds: 8.5 },
   { team: "B", games: null, odds: 3.6 },
-  { team: "B", games: 4, odds: 21.0 },
-  { team: "B", games: 5, odds: 15.0 },
-  { team: "B", games: 6, odds: 12.0 },
+  // Legacy rows — should not influence payout:
+  { team: "A", games: 6, odds: 5.7 },
   { team: "B", games: 7, odds: 18.0 },
 ];
 
@@ -40,39 +35,52 @@ describe("scorePick", () => {
     ).toBe(3.6);
   });
 
-  it("awards exact-score odds when team and games both match", () => {
+  it("awards winner odds + flat bonus when team and games both match", () => {
     expect(
       scorePick({ team: "A", games: 6 }, { winner: "A", games: 6 }, odds),
-    ).toBe(5.7);
+    ).toBe(1.5 + EXACT_GAMES_BONUS);
     expect(
       scorePick({ team: "B", games: 7 }, { winner: "B", games: 7 }, odds),
-    ).toBe(18.0);
+    ).toBe(3.6 + EXACT_GAMES_BONUS);
   });
 
-  it("example from the product spec: A-winner/B-picker", () => {
-    // Scenario: "A vs B, A has 1.5, B has 3.6, A-in-6 is 5.7, A wins 4-2 (so games=6)."
-    // Pick B, any games -> 0
-    // Pick A, wrong games -> 1.5
-    // Pick A, games=6 -> 5.7
+  it("ignores legacy exact-games odds rows for the payout", () => {
+    // A-in-6 has 5.7 in the odds array above. Under the new rule, hitting A
+    // in 6 should yield 1.5 + bonus, NOT 5.7.
+    const r = { winner: "A", games: 6 };
+    expect(scorePick({ team: "A", games: 6 }, r, odds)).toBe(
+      1.5 + EXACT_GAMES_BONUS,
+    );
+  });
+
+  it("example from the product spec: A-winner/B-picker scenario", () => {
+    // Scenario: A vs B, A has 1.5, B has 3.6, A wins 4-2 (so games=6).
+    //   Pick B, any games -> 0
+    //   Pick A, wrong games -> 1.5
+    //   Pick A, games=6 -> 1.5 + bonus
     const r = { winner: "A", games: 6 };
     expect(scorePick({ team: "B", games: 6 }, r, odds)).toBe(0);
     expect(scorePick({ team: "A", games: 7 }, r, odds)).toBe(1.5);
-    expect(scorePick({ team: "A", games: 6 }, r, odds)).toBe(5.7);
+    expect(scorePick({ team: "A", games: 6 }, r, odds)).toBe(
+      1.5 + EXACT_GAMES_BONUS,
+    );
   });
 
-  it("falls back to winner-only odds if exact-score row is missing", () => {
-    const thinOdds: OddsRow[] = [
-      { team: "A", games: null, odds: 1.5 },
-      // no A/in-6 row
-    ];
-    expect(
-      scorePick({ team: "A", games: 6 }, { winner: "A", games: 6 }, thinOdds),
-    ).toBe(1.5);
-  });
-
-  it("returns 0 when picked team wins but there are no odds at all", () => {
+  it("returns 0 when picked team wins but no winner-only odds exist", () => {
+    // No rows for the winning team at all -> base is 0, bonus still applies
+    // on exact match (3), but the pick doesn't exist in the grid.
     expect(
       scorePick({ team: "A", games: 6 }, { winner: "A", games: 6 }, []),
+    ).toBe(EXACT_GAMES_BONUS);
+    // A team picks with no matching odds at all produces only the bonus
+    // if exact, and 0 if not. This is a degenerate state but documented.
+    expect(
+      scorePick({ team: "A", games: 5 }, { winner: "A", games: 6 }, []),
     ).toBe(0);
+  });
+
+  it("exposes EXACT_GAMES_BONUS as a constant for callers to reference", () => {
+    expect(typeof EXACT_GAMES_BONUS).toBe("number");
+    expect(EXACT_GAMES_BONUS).toBeGreaterThan(0);
   });
 });

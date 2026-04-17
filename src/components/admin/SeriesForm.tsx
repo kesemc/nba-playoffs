@@ -13,20 +13,11 @@ import {
 type OddsValues = {
   winnerA: string;
   winnerB: string;
-  a4: string;
-  a5: string;
-  a6: string;
-  a7: string;
-  b4: string;
-  b5: string;
-  b6: string;
-  b7: string;
 };
 
 const EMPTY_ODDS: OddsValues = {
-  winnerA: "", winnerB: "",
-  a4: "", a5: "", a6: "", a7: "",
-  b4: "", b5: "", b6: "", b7: "",
+  winnerA: "",
+  winnerB: "",
 };
 
 type Props =
@@ -201,65 +192,40 @@ export default function SeriesForm(props: Props) {
         </>
       )}
 
-      {/* Odds grid */}
       <div className="rounded-lg border border-neutral-200 dark:border-neutral-800">
         <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-900">
-          Odds (from bet365)
+          Odds to win series (from bet365)
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-xs uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-4 py-2 text-left">Team</th>
-                <th className="px-2 py-2 text-right">Win series</th>
-                <th className="px-2 py-2 text-right">in 4</th>
-                <th className="px-2 py-2 text-right">in 5</th>
-                <th className="px-2 py-2 text-right">in 6</th>
-                <th className="px-2 py-2 text-right">in 7</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-              <tr>
-                <td className="px-4 py-2 font-medium">
-                  {isEdit ? props.teamA : teamA || "Team A"}
-                </td>
-                {(["winnerA", "a4", "a5", "a6", "a7"] as const).map((k) => (
-                  <td key={k} className="px-2 py-2">
-                    <input
-                      inputMode="decimal"
-                      step="0.01"
-                      type="number"
-                      value={odds[k]}
-                      onChange={(e) => setOdd(k, e.target.value)}
-                      className="w-20 rounded border border-neutral-300 bg-white px-2 py-1 text-right tabular-nums dark:border-neutral-700 dark:bg-neutral-900"
-                      required
-                    />
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                <td className="px-4 py-2 font-medium">
-                  {isEdit ? props.teamB : teamB || "Team B"}
-                </td>
-                {(["winnerB", "b4", "b5", "b6", "b7"] as const).map((k) => (
-                  <td key={k} className="px-2 py-2">
-                    <input
-                      inputMode="decimal"
-                      step="0.01"
-                      type="number"
-                      value={odds[k]}
-                      onChange={(e) => setOdd(k, e.target.value)}
-                      className="w-20 rounded border border-neutral-300 bg-white px-2 py-1 text-right tabular-nums dark:border-neutral-700 dark:bg-neutral-900"
-                      required
-                    />
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+        <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+          {(
+            [
+              { key: "winnerA", team: isEdit ? props.teamA : teamA || "Team A" },
+              { key: "winnerB", team: isEdit ? props.teamB : teamB || "Team B" },
+            ] as const
+          ).map(({ key, team }) => (
+            <div
+              key={key}
+              className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+            >
+              <span className="font-medium">{team}</span>
+              <input
+                inputMode="decimal"
+                step="0.01"
+                type="number"
+                value={odds[key]}
+                onChange={(e) => setOdd(key, e.target.value)}
+                className="w-28 rounded border border-neutral-300 bg-white px-2 py-1 text-right tabular-nums dark:border-neutral-700 dark:bg-neutral-900"
+                required
+                aria-label={`${team} decimal odds to win series`}
+              />
+            </div>
+          ))}
         </div>
-        <p className="px-4 py-2 text-xs text-neutral-500">
-          All values must be greater than 1.00 (decimal odds).
+        <p className="border-t border-neutral-200 bg-neutral-50/50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/50">
+          Decimal odds, must be greater than 1.00. Example: enter <b>1.50</b>{" "}
+          for &ldquo;Celtics to win series, 1.50 odds&rdquo;. Pickers receive
+          these points for the correct winner, plus a flat <b>+3 bonus</b> if
+          they also nail the exact games.
         </p>
       </div>
 

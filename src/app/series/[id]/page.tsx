@@ -10,7 +10,7 @@ import {
 } from "@/lib/format";
 import Countdown from "@/components/Countdown";
 import PickForm from "@/components/PickForm";
-import { VALID_GAMES } from "@/lib/teams";
+import { EXACT_GAMES_BONUS } from "@/lib/scoring";
 
 export default async function SeriesPage({
   params,
@@ -49,47 +49,31 @@ export default async function SeriesPage({
         </p>
       </div>
 
-      {/* Odds grid reference */}
       <section className="rounded-lg border border-neutral-200 dark:border-neutral-800">
         <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-medium dark:border-neutral-800 dark:bg-neutral-900">
-          Odds
+          Odds &amp; scoring
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-xs uppercase tracking-wide text-neutral-500">
-              <tr>
-                <th className="px-4 py-2 text-left">Team</th>
-                <th className="px-2 py-2 text-right">Win series</th>
-                {VALID_GAMES.map((g) => (
-                  <th key={g} className="px-2 py-2 text-right">
-                    in {g}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-              {[s.teamA, s.teamB].map((team) => (
-                <tr key={team}>
-                  <td className="px-4 py-2 font-medium">{team}</td>
-                  <td className="px-2 py-2 text-right tabular-nums">
-                    {formatOdds(
-                      s.odds.find((o) => o.team === team && o.games === null)
-                        ?.odds ?? NaN,
-                    )}
-                  </td>
-                  {VALID_GAMES.map((g) => (
-                    <td key={g} className="px-2 py-2 text-right tabular-nums">
-                      {formatOdds(
-                        s.odds.find((o) => o.team === team && o.games === g)
-                          ?.odds ?? NaN,
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+          {[s.teamA, s.teamB].map((team) => {
+            const win =
+              s.odds.find((o) => o.team === team && o.games === null)?.odds ??
+              NaN;
+            return (
+              <div
+                key={team}
+                className="flex items-center justify-between px-4 py-3 text-sm"
+              >
+                <span className="font-medium">{team} to win series</span>
+                <span className="tabular-nums">{formatOdds(win)}</span>
+              </div>
+            );
+          })}
         </div>
+        <p className="border-t border-neutral-200 bg-neutral-50/60 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/50">
+          Scoring: 0 if you pick the wrong team. Winner odds if you pick the
+          right team but miss the games. Winner odds + {EXACT_GAMES_BONUS}{" "}
+          bonus points if you nail both.
+        </p>
       </section>
 
       {/* Result (if any) */}

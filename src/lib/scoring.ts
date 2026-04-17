@@ -2,16 +2,28 @@
  * Scoring — pure, side-effect free, unit-tested.
  *
  * Rules (per series, applied once the real result is known):
- *   - Wrong team             -> 0
- *   - Right team, wrong games -> winner-only odds (games = null in SeriesOdds)
- *   - Right team, exact games -> exact-score odds (games = actual N)
+ *   - Wrong team              -> 0
+ *   - Right team, wrong games -> winner-only odds (bet365 decimal)
+ *   - Right team, exact games -> winner-only odds + EXACT_GAMES_BONUS
+ *
+ * Why not use bet365 exact-score odds directly as the exact-match payout?
+ * Early simulation (scripts/simulate-scoring.ts) showed that for small pools
+ * those payouts (5-30+ points) create runaway variance: one lucky guess can
+ * dominate a 15-series tournament. A flat bonus on top of the winner odds
+ * keeps the upset incentive proportional to difficulty while capping how
+ * much any single series can swing the standings.
  */
+
+export const EXACT_GAMES_BONUS = 3;
 
 export type Pick = { team: string; games: number };
 export type Result = { winner: string; games: number };
 
 // Row shape used by scoring — mirrors SeriesOdds but decoupled from Prisma types
 // so the same function is usable from any call-site (scripts, tests, UI).
+// For the active scoring rule we only consult rows with games === null
+// (winner-only odds). Exact-games rows, if present, are ignored by scoring
+// but may still be rendered for reference.
 export type OddsRow = { team: string; games: number | null; odds: number };
 
 export function scorePick(
@@ -21,19 +33,15 @@ export function scorePick(
 ): number {
   if (pick.team !== result.winner) return 0;
 
-  if (pick.games === result.games) {
-    const exact = odds.find(
-      (o) => o.team === result.winner && o.games === result.games,
-    );
-    if (exact) return exact.odds;
-    // Fallback: if exact-score odds somehow weren't stored, fall through to
-    // winner-only odds rather than silently dropping the pick to 0.
-  }
-
   const winnerOnly = odds.find(
     (o) => o.team === result.winner && o.games === null,
   );
-  return winnerOnly?.odds ?? 0;
+  const base = winnerOnly?.odds ?? 0;
+
+  if (pick.games === result.games) {
+    return base + EXACT_GAMES_BONUS;
+  }
+  return base;
 }
 
 export function roundNumber(n: number, digits = 2): number {

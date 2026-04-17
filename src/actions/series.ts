@@ -21,17 +21,12 @@ function oddsRowsFor(
   teamB: string,
   g: OddsGrid,
 ): Prisma.SeriesOddsCreateManyInput[] {
+  // Only winner-only rows (games = null) are written under the current
+  // scoring rule. Exact-games rows remain supported by the schema for
+  // possible future use but are not persisted today.
   return [
     { seriesId, team: teamA, games: null, odds: g.winnerA },
-    { seriesId, team: teamA, games: 4, odds: g.a4 },
-    { seriesId, team: teamA, games: 5, odds: g.a5 },
-    { seriesId, team: teamA, games: 6, odds: g.a6 },
-    { seriesId, team: teamA, games: 7, odds: g.a7 },
     { seriesId, team: teamB, games: null, odds: g.winnerB },
-    { seriesId, team: teamB, games: 4, odds: g.b4 },
-    { seriesId, team: teamB, games: 5, odds: g.b5 },
-    { seriesId, team: teamB, games: 6, odds: g.b6 },
-    { seriesId, team: teamB, games: 7, odds: g.b7 },
   ];
 }
 
@@ -40,14 +35,6 @@ function parseOddsGridFromForm(formData: FormData): OddsGrid {
   return {
     winnerA: n("winnerA"),
     winnerB: n("winnerB"),
-    a4: n("a4"),
-    a5: n("a5"),
-    a6: n("a6"),
-    a7: n("a7"),
-    b4: n("b4"),
-    b5: n("b5"),
-    b6: n("b6"),
-    b7: n("b7"),
   };
 }
 

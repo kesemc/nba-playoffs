@@ -19,22 +19,13 @@ export default async function AdminSeriesDetailPage({
   });
   if (!s) notFound();
 
-  // Lay out initial odds in the shape the form expects.
-  const find = (team: string, games: number | null) =>
-    s.odds.find((o) => o.team === team && o.games === games)?.odds ?? NaN;
+  const winnerOddsFor = (team: string) =>
+    s.odds.find((o) => o.team === team && o.games === null)?.odds ?? NaN;
   const str = (n: number) => (Number.isNaN(n) ? "" : String(n));
 
   const initialOdds = {
-    winnerA: str(find(s.teamA, null)),
-    winnerB: str(find(s.teamB, null)),
-    a4: str(find(s.teamA, 4)),
-    a5: str(find(s.teamA, 5)),
-    a6: str(find(s.teamA, 6)),
-    a7: str(find(s.teamA, 7)),
-    b4: str(find(s.teamB, 4)),
-    b5: str(find(s.teamB, 5)),
-    b6: str(find(s.teamB, 6)),
-    b7: str(find(s.teamB, 7)),
+    winnerA: str(winnerOddsFor(s.teamA)),
+    winnerB: str(winnerOddsFor(s.teamB)),
   };
 
   return (

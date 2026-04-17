@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { submitPick, type PickActionResult } from "@/actions/picks";
 import { VALID_GAMES } from "@/lib/teams";
 import { formatOdds } from "@/lib/format";
-import type { OddsRow } from "@/lib/scoring";
+import { EXACT_GAMES_BONUS, type OddsRow } from "@/lib/scoring";
 
 type Props = {
   seriesId: string;
@@ -40,8 +40,8 @@ export default function PickForm({
   const [pending, startTransition] = useTransition();
 
   const winnerOnlyOdds = team ? oddsFor(odds, team, null) : null;
-  const exactOdds =
-    team && games !== null ? oddsFor(odds, team, games) : null;
+  const exactPayout =
+    winnerOnlyOdds !== null ? winnerOnlyOdds + EXACT_GAMES_BONUS : null;
 
   const canSubmit = Boolean(team) && games !== null && !disabled;
 
@@ -102,7 +102,6 @@ export default function PickForm({
         <legend className="text-sm font-medium">In how many games?</legend>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {VALID_GAMES.map((g) => {
-            const o = team ? oddsFor(odds, team, g) : null;
             const selected = games === g;
             return (
               <label
@@ -122,27 +121,25 @@ export default function PickForm({
                   className="sr-only"
                 />
                 <div className="font-medium">in {g}</div>
-                <div
-                  className={`text-xs ${
-                    selected
-                      ? "opacity-80"
-                      : "text-neutral-500 dark:text-neutral-400"
-                  }`}
-                >
-                  {o !== null ? `× ${formatOdds(o)}` : "—"}
-                </div>
               </label>
             );
           })}
         </div>
       </fieldset>
 
-      <div className="flex items-center justify-between rounded-md bg-neutral-100 px-3 py-2 text-xs dark:bg-neutral-900">
-        <span className="text-neutral-600 dark:text-neutral-400">
-          If correct team only: <b>{winnerOnlyOdds !== null ? formatOdds(winnerOnlyOdds) : "—"}</b>
-          {"  ·  "}
-          If exact score too: <b>{exactOdds !== null ? formatOdds(exactOdds) : "—"}</b>
-        </span>
+      <div className="rounded-md bg-neutral-100 px-3 py-2 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
+        <div className="flex items-center justify-between">
+          <span>Right team, any games</span>
+          <b className="tabular-nums">
+            {winnerOnlyOdds !== null ? formatOdds(winnerOnlyOdds) : "—"}
+          </b>
+        </div>
+        <div className="mt-1 flex items-center justify-between">
+          <span>Right team + exact games (+{EXACT_GAMES_BONUS} bonus)</span>
+          <b className="tabular-nums">
+            {exactPayout !== null ? formatOdds(exactPayout) : "—"}
+          </b>
+        </div>
       </div>
 
       <button
