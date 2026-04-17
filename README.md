@@ -66,6 +66,25 @@ See `.env.example`. Required:
 - `AUTH_EMAIL_FROM` — "from" address (verified domain in Resend, or `onboarding@resend.dev` for quick testing)
 - `ALLOWED_EMAILS` — comma-separated allow-list so only your friends can sign up
 
+Optional (prize pool display — set to enable the pot card on the dashboard):
+
+- `POOL_ENTRY_FEE` — numeric entry fee per player, e.g. `50`. Leave empty to hide pool UI.
+- `POOL_CURRENCY_SYMBOL` — currency symbol, default `₪`.
+- `POOL_PLAYER_COUNT` — optional explicit entrant count. If empty, the app counts all registered users.
+
+### Prize structure
+
+If the prize pool env vars are set, the dashboard shows a pot card and the leaderboard shows projected payouts per rank:
+
+| Rank            | Share |
+| --------------- | ----: |
+| 1st place       |   55% |
+| 2nd place       |   25% |
+| 3rd place       |   10% |
+| Red Lantern (last) | 10% |
+
+The app never moves real money — it only displays who is owed what. Cash is handled between players. The structure lives in [`src/lib/prize-pool.ts`](src/lib/prize-pool.ts) if you want to tweak percentages or add sidequests.
+
 ## Deployment
 
 - **Hosting**: Vercel (personal account, Hobby plan)

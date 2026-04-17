@@ -3,6 +3,7 @@ import { currentUser } from "@/lib/auth-helpers";
 import { listSeriesForUser } from "@/lib/series-queries";
 import { formatDateTime, formatRound, formatPoints } from "@/lib/format";
 import Countdown from "@/components/Countdown";
+import PrizePool from "@/components/PrizePool";
 import { scorePick } from "@/lib/scoring";
 
 export default async function HomePage() {
@@ -39,6 +40,8 @@ export default async function HomePage() {
           Welcome back{user.name ? `, ${user.name}` : ""}. Make your picks before tipoff.
         </p>
       </header>
+
+      <PrizePool />
 
       <section>
         <h2 className="text-lg font-semibold">Pick now</h2>
