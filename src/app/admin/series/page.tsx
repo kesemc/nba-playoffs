@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDateTime, formatRound } from "@/lib/format";
+import DeleteSeriesButton from "@/components/admin/DeleteSeriesButton";
 
 export const dynamic = "force-dynamic";
 
@@ -52,12 +53,21 @@ export default async function AdminSeriesListPage() {
                     {s.result ? `${s.result.winner} in ${s.result.games}` : "—"}
                   </td>
                   <td className="px-2 py-2 text-right">
-                    <Link
-                      href={`/admin/series/${s.id}`}
-                      className="text-xs font-medium underline underline-offset-2"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/admin/series/${s.id}`}
+                        className="text-xs font-medium underline underline-offset-2"
+                      >
+                        Edit
+                      </Link>
+                      <DeleteSeriesButton
+                        seriesId={s.id}
+                        label="Delete"
+                        matchup={`${s.teamA} vs ${s.teamB}`}
+                        pickCount={s._count.picks}
+                        hasResult={Boolean(s.result)}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

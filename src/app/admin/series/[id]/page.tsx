@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { formatDateTime, formatRound } from "@/lib/format";
 import SeriesForm from "@/components/admin/SeriesForm";
 import ResultForm from "@/components/admin/ResultForm";
+import DeleteSeriesButton from "@/components/admin/DeleteSeriesButton";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function AdminSeriesDetailPage({
 }) {
   const s = await prisma.series.findUnique({
     where: { id: params.id },
-    include: { odds: true, result: true },
+    include: { odds: true, result: true, _count: { select: { picks: true } } },
   });
   if (!s) notFound();
 
@@ -72,6 +73,25 @@ export default async function AdminSeriesDetailPage({
           initial={
             s.result ? { winner: s.result.winner, games: s.result.games } : null
           }
+        />
+      </section>
+
+      <section className="space-y-3 rounded-lg border border-red-200 bg-red-50/50 p-4 dark:border-red-900/50 dark:bg-red-950/30">
+        <h2 className="text-lg font-semibold text-red-800 dark:text-red-300">
+          Danger zone
+        </h2>
+        <p className="text-sm text-red-700/80 dark:text-red-300/80">
+          Delete this series along with its odds, all submitted picks, and any
+          entered result. This cannot be undone.
+        </p>
+        <DeleteSeriesButton
+          seriesId={s.id}
+          matchup={`${s.teamA} vs ${s.teamB}`}
+          pickCount={s._count.picks}
+          hasResult={Boolean(s.result)}
+          label="Delete series"
+          redirectTo="/admin/series"
+          className="rounded-md border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-neutral-950 dark:text-red-300 dark:hover:bg-red-950/50"
         />
       </section>
     </main>

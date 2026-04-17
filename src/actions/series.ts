@@ -149,6 +149,26 @@ export async function enterSeriesResult(
   return { ok: true, data: null };
 }
 
+export async function deleteSeries(
+  formData: FormData,
+): Promise<ActionResult<null>> {
+  await requireAdmin();
+  const seriesId = String(formData.get("seriesId") ?? "");
+  if (!seriesId) return { ok: false, error: "Missing seriesId" };
+
+  const series = await prisma.series.findUnique({ where: { id: seriesId } });
+  if (!series) return { ok: false, error: "Series not found" };
+
+  // The schema has onDelete: Cascade on SeriesOdds, Pick, and SeriesResult,
+  // so a single delete takes everything down together.
+  await prisma.series.delete({ where: { id: seriesId } });
+
+  revalidatePath("/");
+  revalidatePath("/admin/series");
+  revalidatePath("/leaderboard");
+  return { ok: true, data: null };
+}
+
 export async function clearSeriesResult(
   formData: FormData,
 ): Promise<ActionResult<null>> {

@@ -1,4 +1,5 @@
 import { ROUND_LABELS, type Round } from "@/lib/teams";
+import { formatIsraelDateTime } from "@/lib/tz";
 
 export function formatRound(round: string): string {
   if (round in ROUND_LABELS) return ROUND_LABELS[round as Round];
@@ -6,13 +7,7 @@ export function formatRound(round: string): string {
 }
 
 export function formatDateTime(d: Date): string {
-  return d.toLocaleString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatIsraelDateTime(d);
 }
 
 export function formatOdds(o: number): string {

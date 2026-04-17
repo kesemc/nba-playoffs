@@ -4,6 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { NBA_TEAMS, ROUNDS, ROUND_LABELS } from "@/lib/teams";
 import { createSeries, updateSeriesOdds } from "@/actions/series";
+import {
+  formatIsraelDateTime,
+  israelWallclockToUtc,
+  utcToIsraelWallclock,
+} from "@/lib/tz";
 
 type OddsValues = {
   winnerA: string;
@@ -46,7 +51,7 @@ export default function SeriesForm(props: Props) {
   const [teamA, setTeamA] = useState<string>(isEdit ? props.teamA : "");
   const [teamB, setTeamB] = useState<string>(isEdit ? props.teamB : "");
   const [lockTime, setLockTime] = useState<string>(
-    isEdit ? toLocalDateTimeInput(new Date(props.lockTime)) : "",
+    isEdit ? utcToIsraelWallclock(new Date(props.lockTime)) : "",
   );
   const [odds, setOdds] = useState<OddsValues>(
     isEdit ? props.initialOdds : EMPTY_ODDS,
@@ -71,7 +76,12 @@ export default function SeriesForm(props: Props) {
       fd.set("round", round);
       fd.set("teamA", teamA);
       fd.set("teamB", teamB);
-      fd.set("lockTime", new Date(lockTime).toISOString());
+      try {
+        fd.set("lockTime", israelWallclockToUtc(lockTime).toISOString());
+      } catch {
+        setError("Please pick a valid lock date and time.");
+        return;
+      }
     }
     if (isEdit) {
       fd.set("seriesId", props.seriesId);
@@ -151,7 +161,12 @@ export default function SeriesForm(props: Props) {
           </div>
 
           <label className="block text-sm">
-            <span className="mb-1 block font-medium">Lock time (Game 1 tipoff)</span>
+            <span className="mb-1 block font-medium">
+              Lock time (Game 1 tipoff){" "}
+              <span className="text-xs font-normal text-neutral-500">
+                — Israel time (Asia/Jerusalem)
+              </span>
+            </span>
             <input
               type="datetime-local"
               value={lockTime}
@@ -159,12 +174,15 @@ export default function SeriesForm(props: Props) {
               className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-900"
               required
             />
+            <span className="mt-1 block text-xs text-neutral-500">
+              Enter the hour as you would read it on a clock in Israel.
+            </span>
           </label>
         </>
       ) : (
         <div className="rounded-md bg-neutral-100 px-3 py-2 text-sm dark:bg-neutral-900">
           Editing odds for <b>{props.teamA}</b> vs <b>{props.teamB}</b> · locks{" "}
-          {new Date(props.lockTime).toLocaleString()}
+          {formatIsraelDateTime(new Date(props.lockTime))}
         </div>
       )}
 
@@ -251,8 +269,3 @@ export default function SeriesForm(props: Props) {
   );
 }
 
-function toLocalDateTimeInput(d: Date): string {
-  // Convert Date -> `YYYY-MM-DDTHH:mm` in local time for <input type="datetime-local">
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
