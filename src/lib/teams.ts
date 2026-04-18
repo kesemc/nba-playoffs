@@ -59,41 +59,42 @@ export type Conference = "East" | "West";
 
 export type TeamMeta = {
   tricode: string;        // "BOS", "LAL", etc. — for compact display & fallback logo
+  nickname: string;       // "Celtics", "Lakers" — used in bracket cards (Sporting-News style)
   conference: Conference; // stable franchise-level assignment
   nbaId: string;          // NBA team ID used in cdn.nba.com logo URLs
 };
 
 export const TEAM_META: Record<NbaTeam, TeamMeta> = {
-  "Atlanta Hawks":          { tricode: "ATL", conference: "East", nbaId: "1610612737" },
-  "Boston Celtics":         { tricode: "BOS", conference: "East", nbaId: "1610612738" },
-  "Brooklyn Nets":          { tricode: "BKN", conference: "East", nbaId: "1610612751" },
-  "Charlotte Hornets":      { tricode: "CHA", conference: "East", nbaId: "1610612766" },
-  "Chicago Bulls":          { tricode: "CHI", conference: "East", nbaId: "1610612741" },
-  "Cleveland Cavaliers":    { tricode: "CLE", conference: "East", nbaId: "1610612739" },
-  "Dallas Mavericks":       { tricode: "DAL", conference: "West", nbaId: "1610612742" },
-  "Denver Nuggets":         { tricode: "DEN", conference: "West", nbaId: "1610612743" },
-  "Detroit Pistons":        { tricode: "DET", conference: "East", nbaId: "1610612765" },
-  "Golden State Warriors":  { tricode: "GSW", conference: "West", nbaId: "1610612744" },
-  "Houston Rockets":        { tricode: "HOU", conference: "West", nbaId: "1610612745" },
-  "Indiana Pacers":         { tricode: "IND", conference: "East", nbaId: "1610612754" },
-  "LA Clippers":            { tricode: "LAC", conference: "West", nbaId: "1610612746" },
-  "Los Angeles Lakers":     { tricode: "LAL", conference: "West", nbaId: "1610612747" },
-  "Memphis Grizzlies":      { tricode: "MEM", conference: "West", nbaId: "1610612763" },
-  "Miami Heat":             { tricode: "MIA", conference: "East", nbaId: "1610612748" },
-  "Milwaukee Bucks":        { tricode: "MIL", conference: "East", nbaId: "1610612749" },
-  "Minnesota Timberwolves": { tricode: "MIN", conference: "West", nbaId: "1610612750" },
-  "New Orleans Pelicans":   { tricode: "NOP", conference: "West", nbaId: "1610612740" },
-  "New York Knicks":        { tricode: "NYK", conference: "East", nbaId: "1610612752" },
-  "Oklahoma City Thunder":  { tricode: "OKC", conference: "West", nbaId: "1610612760" },
-  "Orlando Magic":          { tricode: "ORL", conference: "East", nbaId: "1610612753" },
-  "Philadelphia 76ers":     { tricode: "PHI", conference: "East", nbaId: "1610612755" },
-  "Phoenix Suns":           { tricode: "PHX", conference: "West", nbaId: "1610612756" },
-  "Portland Trail Blazers": { tricode: "POR", conference: "West", nbaId: "1610612757" },
-  "Sacramento Kings":       { tricode: "SAC", conference: "West", nbaId: "1610612758" },
-  "San Antonio Spurs":      { tricode: "SAS", conference: "West", nbaId: "1610612759" },
-  "Toronto Raptors":        { tricode: "TOR", conference: "East", nbaId: "1610612761" },
-  "Utah Jazz":              { tricode: "UTA", conference: "West", nbaId: "1610612762" },
-  "Washington Wizards":     { tricode: "WAS", conference: "East", nbaId: "1610612764" },
+  "Atlanta Hawks":          { tricode: "ATL", nickname: "Hawks",        conference: "East", nbaId: "1610612737" },
+  "Boston Celtics":         { tricode: "BOS", nickname: "Celtics",      conference: "East", nbaId: "1610612738" },
+  "Brooklyn Nets":          { tricode: "BKN", nickname: "Nets",         conference: "East", nbaId: "1610612751" },
+  "Charlotte Hornets":      { tricode: "CHA", nickname: "Hornets",      conference: "East", nbaId: "1610612766" },
+  "Chicago Bulls":          { tricode: "CHI", nickname: "Bulls",        conference: "East", nbaId: "1610612741" },
+  "Cleveland Cavaliers":    { tricode: "CLE", nickname: "Cavaliers",    conference: "East", nbaId: "1610612739" },
+  "Dallas Mavericks":       { tricode: "DAL", nickname: "Mavericks",    conference: "West", nbaId: "1610612742" },
+  "Denver Nuggets":         { tricode: "DEN", nickname: "Nuggets",      conference: "West", nbaId: "1610612743" },
+  "Detroit Pistons":        { tricode: "DET", nickname: "Pistons",      conference: "East", nbaId: "1610612765" },
+  "Golden State Warriors":  { tricode: "GSW", nickname: "Warriors",     conference: "West", nbaId: "1610612744" },
+  "Houston Rockets":        { tricode: "HOU", nickname: "Rockets",      conference: "West", nbaId: "1610612745" },
+  "Indiana Pacers":         { tricode: "IND", nickname: "Pacers",       conference: "East", nbaId: "1610612754" },
+  "LA Clippers":            { tricode: "LAC", nickname: "Clippers",     conference: "West", nbaId: "1610612746" },
+  "Los Angeles Lakers":     { tricode: "LAL", nickname: "Lakers",       conference: "West", nbaId: "1610612747" },
+  "Memphis Grizzlies":      { tricode: "MEM", nickname: "Grizzlies",    conference: "West", nbaId: "1610612763" },
+  "Miami Heat":             { tricode: "MIA", nickname: "Heat",         conference: "East", nbaId: "1610612748" },
+  "Milwaukee Bucks":        { tricode: "MIL", nickname: "Bucks",        conference: "East", nbaId: "1610612749" },
+  "Minnesota Timberwolves": { tricode: "MIN", nickname: "Timberwolves", conference: "West", nbaId: "1610612750" },
+  "New Orleans Pelicans":   { tricode: "NOP", nickname: "Pelicans",     conference: "West", nbaId: "1610612740" },
+  "New York Knicks":        { tricode: "NYK", nickname: "Knicks",       conference: "East", nbaId: "1610612752" },
+  "Oklahoma City Thunder":  { tricode: "OKC", nickname: "Thunder",      conference: "West", nbaId: "1610612760" },
+  "Orlando Magic":          { tricode: "ORL", nickname: "Magic",        conference: "East", nbaId: "1610612753" },
+  "Philadelphia 76ers":     { tricode: "PHI", nickname: "76ers",        conference: "East", nbaId: "1610612755" },
+  "Phoenix Suns":           { tricode: "PHX", nickname: "Suns",         conference: "West", nbaId: "1610612756" },
+  "Portland Trail Blazers": { tricode: "POR", nickname: "Trail Blazers",conference: "West", nbaId: "1610612757" },
+  "Sacramento Kings":       { tricode: "SAC", nickname: "Kings",        conference: "West", nbaId: "1610612758" },
+  "San Antonio Spurs":      { tricode: "SAS", nickname: "Spurs",        conference: "West", nbaId: "1610612759" },
+  "Toronto Raptors":        { tricode: "TOR", nickname: "Raptors",      conference: "East", nbaId: "1610612761" },
+  "Utah Jazz":              { tricode: "UTA", nickname: "Jazz",         conference: "West", nbaId: "1610612762" },
+  "Washington Wizards":     { tricode: "WAS", nickname: "Wizards",      conference: "East", nbaId: "1610612764" },
 };
 
 /**
@@ -111,6 +112,14 @@ export function getTeamLogoUrl(team: string): string | null {
 export function getTeamTricode(team: string): string {
   const meta = TEAM_META[team as NbaTeam];
   return meta?.tricode ?? team.slice(0, 3).toUpperCase();
+}
+
+export function getTeamNickname(team: string): string {
+  const meta = TEAM_META[team as NbaTeam];
+  if (meta) return meta.nickname;
+  // Defensive fallback: last word of the string, e.g. "Some City Hawks" -> "Hawks".
+  const parts = team.trim().split(/\s+/);
+  return parts[parts.length - 1] ?? team;
 }
 
 export function getTeamConference(team: string): Conference | null {

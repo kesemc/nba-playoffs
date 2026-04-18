@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/db";
 import MatchupCard from "@/components/bracket/MatchupCard";
+import BracketGrid from "@/components/bracket/BracketGrid";
 import {
   buildBracket,
   type BracketData,
@@ -31,10 +32,9 @@ export default async function BracketPage() {
   }));
 
   const bracket = buildBracket(seriesList);
-  const hasAnySeries = seriesList.length > 0;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6">
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Bracket</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
@@ -43,19 +43,21 @@ export default async function BracketPage() {
         </p>
       </header>
 
-      {!hasAnySeries ? (
-        <EmptyBracket />
-      ) : (
-        <div className="space-y-10">
-          <RoundSection title="First Round" split={bracket.R1} />
-          <RoundSection
-            title="Conference Semifinals"
-            split={bracket.R2}
-          />
-          <RoundSection title="Conference Finals" split={bracket.CF} />
-          <FinalsSection finals={bracket.F} />
-        </div>
-      )}
+      {/* Desktop: classic horizontal bracket. Horizontally scrollable if the
+          viewport is narrower than the bracket's natural width. */}
+      <div className="hidden lg:block">
+        <BracketGrid bracket={bracket} />
+      </div>
+
+      {/* Mobile/tablet: stacked round-by-round layout (existing design).
+          A horizontal bracket doesn't read well on small screens. */}
+      <div className="lg:hidden space-y-10">
+        <RoundSection title="First Round" split={bracket.R1} />
+        <RoundSection title="Conference Semifinals" split={bracket.R2} />
+        <RoundSection title="Conference Finals" split={bracket.CF} />
+        <FinalsSection finals={bracket.F} />
+        {seriesList.length === 0 ? <EmptyBracket /> : null}
+      </div>
     </main>
   );
 }
