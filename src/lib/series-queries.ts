@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { scorePick, type OddsRow } from "@/lib/scoring";
+import { ensureAutoPicksForLockedSeries } from "@/lib/auto-picks";
 
 export type SeriesWithEverything = {
   id: string;
@@ -62,6 +63,11 @@ export async function getSeriesDetail(
     })
   | null
 > {
+  // If the series is already locked, make sure any no-show users get their
+  // random auto-pick written before we read. Safe to run unconditionally —
+  // the helper checks lockTime and bails early if still open.
+  await ensureAutoPicksForLockedSeries(seriesId);
+
   const s = await prisma.series.findUnique({
     where: { id: seriesId },
     include: {
@@ -131,6 +137,21 @@ export async function getSeriesDetail(
 export async function computeLeaderboard(): Promise<
   { userId: string; displayName: string; points: number }[]
 > {
+  // Backfill random auto-picks for every already-locked series before we
+  // compute totals. Without this, users who never submitted a pick would
+  // silently score 0 for that series instead of getting a random pick.
+  // Only series with a result affect scoring, so we only bother with those.
+  const lockedResulted = await prisma.series.findMany({
+    where: {
+      lockTime: { lte: new Date() },
+      result: { isNot: null },
+    },
+    select: { id: true },
+  });
+  await Promise.all(
+    lockedResulted.map((s) => ensureAutoPicksForLockedSeries(s.id)),
+  );
+
   const [users, picks, seriesList] = await Promise.all([
     prisma.user.findMany({ select: { id: true, name: true, email: true } }),
     prisma.pick.findMany({ select: { userId: true, seriesId: true, pickedTeam: true, pickedGames: true } }),

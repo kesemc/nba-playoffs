@@ -14,26 +14,52 @@ describe("computePrizeBreakdown", () => {
     expect(r.slots.reduce((s, x) => s + x.amount, 0)).toBe(500);
   });
 
+  it("last place is exactly the entry fee", () => {
+    const r = computePrizeBreakdown(config, 10);
+    const last = r.slots.find((s) => s.id === "last")!;
+    expect(last.amount).toBe(config.entryFee);
+  });
+
   it("rounding drift is absorbed by first place, never lost", () => {
-    // With 11 players the raw splits (55/25/10/10) give decimals; make sure
-    // the rounded sum still equals the total pot.
+    // With 11 players the top-3 shares of (pot − entryFee) give decimals;
+    // make sure the rounded sum still equals the total pot.
     const r = computePrizeBreakdown(config, 11);
     expect(r.totalPot).toBe(550);
     expect(r.slots.reduce((s, x) => s + x.amount, 0)).toBe(550);
   });
 
-  it("keeps the prize order intact (1st > 2nd > 3rd > last)", () => {
+  it("keeps the prize order intact among the top 3 (1st > 2nd > 3rd)", () => {
     const r = computePrizeBreakdown(config, 12);
-    const [first, second, third, last] = r.slots.map((s) => s.amount);
+    const [first, second, third] = r.slots
+      .filter((s) => s.id !== "last")
+      .map((s) => s.amount);
     expect(first).toBeGreaterThan(second);
     expect(second).toBeGreaterThan(third);
-    expect(third).toBeGreaterThanOrEqual(last); // 10% vs 10% — equal is fine
   });
 
-  it("handles a single player gracefully (winner takes all that's there)", () => {
+  it("top 3 split the pot _after_ the last-place refund in 55:25:10 ratio", () => {
+    // 12 × 50 = 600 pot. Last gets 50. Remaining 550 splits:
+    //   1st = 550 × (0.55/0.90) = 336.11 → 336 (+drift)
+    //   2nd = 550 × (0.25/0.90) = 152.78 → 153
+    //   3rd = 550 × (0.10/0.90) =  61.11 →  61
+    //   last = 50
+    // sum = 336 + 153 + 61 + 50 = 600 ✓
+    const r = computePrizeBreakdown(config, 12);
+    const amounts = Object.fromEntries(r.slots.map((s) => [s.id, s.amount]));
+    expect(amounts.first).toBe(336);
+    expect(amounts.second).toBe(153);
+    expect(amounts.third).toBe(61);
+    expect(amounts.last).toBe(50);
+  });
+
+  it("handles a single player gracefully (last-place cap kicks in)", () => {
     const r = computePrizeBreakdown(config, 1);
     expect(r.totalPot).toBe(50);
+    // With 1 player, totalPot === entryFee, so last=50 and the top 3 each
+    // get 0. Total still sums to the pot.
     expect(r.slots.reduce((s, x) => s + x.amount, 0)).toBe(50);
+    const last = r.slots.find((s) => s.id === "last")!;
+    expect(last.amount).toBe(50);
   });
 });
 
@@ -61,8 +87,16 @@ describe("prizeSlotForRank", () => {
 });
 
 describe("PRIZE_STRUCTURE", () => {
-  it("percentages sum to 1.00", () => {
-    const sum = PRIZE_STRUCTURE.reduce((s, p) => s + p.pct, 0);
-    expect(sum).toBeCloseTo(1, 6);
+  it("has a single entry-fee refund slot (last place)", () => {
+    const refundSlots = PRIZE_STRUCTURE.filter((s) => s.kind === "entryFeeRefund");
+    expect(refundSlots).toHaveLength(1);
+    expect(refundSlots[0]?.id).toBe("last");
+    expect(refundSlots[0]?.label).toBe("Last place");
+  });
+
+  it("has positive top-share weights for 1st/2nd/3rd", () => {
+    const top = PRIZE_STRUCTURE.filter((s) => s.kind === "topShare");
+    expect(top).toHaveLength(3);
+    for (const s of top) expect(s.topShare).toBeGreaterThan(0);
   });
 });

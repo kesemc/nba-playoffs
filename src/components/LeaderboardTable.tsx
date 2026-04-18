@@ -122,7 +122,7 @@ export default function LeaderboardTable({
           <b className="text-neutral-700 dark:text-neutral-300">
             {formatCurrency(pool!.totalPot, pool!.currencySymbol)}
           </b>{" "}
-          · Red Lantern goes to the last-place finisher.
+          · Last place gets their entry fee back.
         </p>
       ) : null}
     </div>

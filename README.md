@@ -98,12 +98,12 @@ Optional (prize pool display — set to enable the pot card on the dashboard):
 
 If the prize pool env vars are set, the dashboard shows a pot card and the leaderboard shows projected payouts per rank:
 
-| Rank            | Share |
-| --------------- | ----: |
-| 1st place       |   55% |
-| 2nd place       |   25% |
-| 3rd place       |   10% |
-| Red Lantern (last) | 10% |
+| Rank       | Amount                                                    |
+| ---------- | --------------------------------------------------------- |
+| 1st place  | 55% of the pot _after_ the last-place refund              |
+| 2nd place  | 25% of the pot _after_ the last-place refund              |
+| 3rd place  | 10% of the pot _after_ the last-place refund              |
+| Last place | their entry fee back (gentle consolation, nobody eats it) |
 
 The app never moves real money — it only displays who is owed what. Cash is handled between players. The structure lives in [`src/lib/prize-pool.ts`](src/lib/prize-pool.ts) if you want to tweak percentages or add sidequests.
 
