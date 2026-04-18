@@ -4,6 +4,7 @@ import { listSeriesForUser } from "@/lib/series-queries";
 import { formatDateTime, formatRound, formatPoints } from "@/lib/format";
 import Countdown from "@/components/Countdown";
 import PrizePool from "@/components/PrizePool";
+import ParticipationSummary from "@/components/ParticipationSummary";
 import { scorePick } from "@/lib/scoring";
 
 export default async function HomePage() {
@@ -77,6 +78,14 @@ export default async function HomePage() {
                     </span>
                   )}
                 </div>
+                {s.participation ? (
+                  <div className="mt-2">
+                    <ParticipationSummary
+                      participation={s.participation}
+                      variant="compact"
+                    />
+                  </div>
+                ) : null}
                 <Link
                   href={`/series/${s.id}`}
                   className="mt-3 inline-block text-sm font-medium underline underline-offset-2"

@@ -10,6 +10,7 @@ import {
 } from "@/lib/format";
 import Countdown from "@/components/Countdown";
 import PickForm from "@/components/PickForm";
+import ParticipationSummary from "@/components/ParticipationSummary";
 import { EXACT_GAMES_BONUS } from "@/lib/scoring";
 
 export default async function SeriesPage({
@@ -89,7 +90,12 @@ export default async function SeriesPage({
       {/* Pick form (pre-lock) OR user's locked pick recap */}
       {!s.isLocked ? (
         <section className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-          <h2 className="text-sm font-medium">Your pick</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-medium">Your pick</h2>
+            {s.participation ? (
+              <ParticipationSummary participation={s.participation} />
+            ) : null}
+          </div>
           <div className="mt-3">
             <PickForm
               seriesId={s.id}
