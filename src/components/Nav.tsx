@@ -19,6 +19,7 @@ export default async function Nav() {
           {user ? (
             <>
               <NavLink href="/" label="Dashboard" />
+              <NavLink href="/bracket" label="Bracket" />
               <NavLink href="/leaderboard" label="Leaderboard" />
               {user.isAdmin ? (
                 <NavLink href="/admin" label="Admin" matchPrefix />
