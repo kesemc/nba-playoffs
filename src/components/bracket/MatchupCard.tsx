@@ -1,5 +1,5 @@
 import TeamLogo from "@/components/bracket/TeamLogo";
-import type { BracketSeries } from "@/lib/bracket";
+import { gamesWonBy, type BracketSeries } from "@/lib/bracket";
 import { getTeamNickname } from "@/lib/teams";
 
 type Variant = "full" | "compact";
@@ -36,7 +36,7 @@ export default function MatchupCard({
         team={teamA}
         isWinner={winnerTeam === teamA}
         isLoser={loserTeam === teamA}
-        games={gamesFor(teamA, result)}
+        games={gamesWonBy(teamA, result)}
         variant={variant}
       />
       <div className="h-px bg-neutral-100 dark:bg-neutral-800" />
@@ -44,23 +44,13 @@ export default function MatchupCard({
         team={teamB}
         isWinner={winnerTeam === teamB}
         isLoser={loserTeam === teamB}
-        games={gamesFor(teamB, result)}
+        games={gamesWonBy(teamB, result)}
         variant={variant}
       />
     </div>
   );
 }
 
-function gamesFor(
-  team: string,
-  result: { winner: string; games: number } | null,
-): number | null {
-  if (!result) return null;
-  if (team === result.winner) return result.games;
-  // Loser's game count = total series length minus 4 (wins needed to clinch).
-  // e.g. winner in 6 → loser won 2.
-  return result.games - 4;
-}
 
 function TeamRow({
   team,

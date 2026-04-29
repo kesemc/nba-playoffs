@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildBracket, type BracketSeries } from "../src/lib/bracket";
+import { buildBracket, gamesWonBy, type BracketSeries } from "../src/lib/bracket";
 
 function makeSeries(
   id: string,
@@ -102,5 +102,37 @@ describe("buildBracket", () => {
     expect(b.R2.east).toHaveLength(1);
     expect(b.CF.west).toHaveLength(1);
     expect(b.F).toHaveLength(1);
+  });
+});
+
+describe("gamesWonBy", () => {
+  const winner = "Boston Celtics";
+  const loser = "Miami Heat";
+
+  it("returns null when there's no result yet", () => {
+    expect(gamesWonBy(winner, null)).toBeNull();
+    expect(gamesWonBy(loser, null)).toBeNull();
+  });
+
+  it("winner always won exactly 4 games (regardless of series length)", () => {
+    for (const games of [4, 5, 6, 7]) {
+      expect(gamesWonBy(winner, { winner, games })).toBe(4);
+    }
+  });
+
+  it("loser won (length - 4) games", () => {
+    expect(gamesWonBy(loser, { winner, games: 4 })).toBe(0); // sweep
+    expect(gamesWonBy(loser, { winner, games: 5 })).toBe(1); // 4-1
+    expect(gamesWonBy(loser, { winner, games: 6 })).toBe(2); // 4-2
+    expect(gamesWonBy(loser, { winner, games: 7 })).toBe(3); // 4-3
+  });
+
+  it("regression: 5-game series renders as 4-1, not 5-1", () => {
+    // The bug was that the winner row was showing `result.games` (the
+    // series length) instead of the winner's wins (always 4). For Spurs
+    // /Trail Blazers ending in 5 games, the bracket displayed "5-1".
+    const result = { winner, games: 5 };
+    expect(gamesWonBy(winner, result)).toBe(4);
+    expect(gamesWonBy(loser, result)).toBe(1);
   });
 });

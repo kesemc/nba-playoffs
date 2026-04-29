@@ -81,3 +81,23 @@ function conferenceForSeries(s: BracketSeries): Conference | null {
     getTeamConference(s.teamA) ?? getTeamConference(s.teamB) ?? null
   );
 }
+
+/**
+ * Returns how many games a particular team won, given a series result.
+ *
+ * `result.games` is the *total series length* (4–7). In a best-of-7, the
+ * winner clinches at exactly 4 wins and the loser won the rest:
+ *
+ *   ended in 4 → 4–0    ended in 6 → 4–2
+ *   ended in 5 → 4–1    ended in 7 → 4–3
+ *
+ * Returns null when there's no result yet.
+ */
+export function gamesWonBy(
+  team: string,
+  result: { winner: string; games: number } | null,
+): number | null {
+  if (!result) return null;
+  if (team === result.winner) return 4;
+  return result.games - 4;
+}
