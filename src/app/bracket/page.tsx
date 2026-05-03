@@ -69,8 +69,11 @@ function RoundSection({
   title: string;
   split: BracketData["R1"];
 }) {
-  const hasAny = split.east.length + split.west.length > 0;
-  if (!hasAny) return null;
+  // Mobile is a compact stacked list per conference — slot positions
+  // (used by the desktop bracket) don't matter here, so we drop nulls.
+  const east = compact(split.east);
+  const west = compact(split.west);
+  if (east.length + west.length === 0) return null;
 
   return (
     <section>
@@ -78,11 +81,15 @@ function RoundSection({
         {title}
       </h2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <ConferenceColumn label="West" series={split.west} />
-        <ConferenceColumn label="East" series={split.east} />
+        <ConferenceColumn label="West" series={west} />
+        <ConferenceColumn label="East" series={east} />
       </div>
     </section>
   );
+}
+
+function compact(slots: BracketData["R1"]["east"]): BracketSeries[] {
+  return slots.filter((s): s is BracketSeries => s !== null);
 }
 
 function ConferenceColumn({

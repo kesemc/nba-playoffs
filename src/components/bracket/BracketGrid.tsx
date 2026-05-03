@@ -22,30 +22,27 @@ import type { BracketData, BracketSeries } from "@/lib/bracket";
  *     to the column height with matching coordinates.
  */
 export default function BracketGrid({ bracket }: { bracket: BracketData }) {
-  const westR1 = padSlots(bracket.R1.west, 4);
-  const westR2 = padSlots(bracket.R2.west, 2);
-  const westCF = padSlots(bracket.CF.west, 1);
-  const eastR1 = padSlots(bracket.R1.east, 4);
-  const eastR2 = padSlots(bracket.R2.east, 2);
-  const eastCF = padSlots(bracket.CF.east, 1);
+  // R1/R2/CF are already slot-indexed by buildBracket — see lib/bracket.ts.
+  // Finals is a flat array (no slot logic needed, max 1 series), so we still
+  // pad it to a single TBD slot before any Finals series exists.
   const finals = padSlots(bracket.F, 1);
 
   return (
     <div className="overflow-x-auto">
       <div className="flex items-stretch min-h-[640px] min-w-[1280px] text-sm">
-        <RoundColumn label="First Round" matchups={westR1} />
+        <RoundColumn label="First Round" matchups={bracket.R1.west} />
         <BracketConnector type="four-to-two" direction="right" />
-        <RoundColumn label="Conf. Semis" matchups={westR2} />
+        <RoundColumn label="Conf. Semis" matchups={bracket.R2.west} />
         <BracketConnector type="two-to-one" direction="right" />
-        <RoundColumn label="Western Finals" matchups={westCF} />
+        <RoundColumn label="Western Finals" matchups={bracket.CF.west} />
         <BracketConnector type="one-to-one" direction="right" />
         <RoundColumn label="NBA Finals" matchups={finals} emphasis />
         <BracketConnector type="one-to-one" direction="left" />
-        <RoundColumn label="Eastern Finals" matchups={eastCF} />
+        <RoundColumn label="Eastern Finals" matchups={bracket.CF.east} />
         <BracketConnector type="two-to-one" direction="left" />
-        <RoundColumn label="Conf. Semis" matchups={eastR2} />
+        <RoundColumn label="Conf. Semis" matchups={bracket.R2.east} />
         <BracketConnector type="four-to-two" direction="left" />
-        <RoundColumn label="First Round" matchups={eastR1} />
+        <RoundColumn label="First Round" matchups={bracket.R1.east} />
       </div>
       <div className="mt-2 flex justify-between px-2 text-[10px] uppercase tracking-widest text-neutral-400 min-w-[1280px]">
         <span>Western Conference →</span>
