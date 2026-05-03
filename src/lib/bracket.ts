@@ -11,8 +11,9 @@
  * positions are what visually align across rounds in the bracket grid.
  *
  * Slot-placement rules:
- *   - R1 (4 slots): filled in `createdAt` order. The admin controls the
- *     vertical layout by the order they create series.
+ *   - R1 (4 slots): filled by matching each series to the hardcoded
+ *     `R1_LAYOUT` (per season). Unrecognized matchups fall back to
+ *     `createdAt` order.
  *   - R2 (2 slots): each R2 series is placed by tracing its two teams
  *     back to their R1 series. The R1 slot index → "pair index"
  *     (slots 0–1 → pair 0 / top half, slots 2–3 → pair 1 / bottom half),
@@ -56,6 +57,52 @@ const R1_SLOTS = 4;
 const R2_SLOTS = 2;
 const CF_SLOTS = 1;
 
+/**
+ * 2026 NBA Playoffs first-round matchups, in the *vertical order* they
+ * should appear in the bracket. R1 → R2 visual pairing follows
+ * `floor(slot / 2)` (slots 0–1 → R2 top, slots 2–3 → R2 bottom), so
+ * R2 placement only works if R1 is laid out in this order.
+ *
+ * Matching is order-insensitive — admin can create the series with
+ * either team as teamA/teamB.
+ *
+ * If a series doesn't match any entry here (e.g. tests, or a future
+ * season before this list is updated), it falls back to the next
+ * free slot in `createdAt` order.
+ *
+ * To wire up a new season: replace the matchups below with that
+ * year's R1 pairings in vertical bracket order. Nothing else needs
+ * to change.
+ */
+const R1_LAYOUT: Record<Conference, ReadonlyArray<readonly [string, string]>> = {
+  West: [
+    ["Oklahoma City Thunder", "Phoenix Suns"],
+    ["Los Angeles Lakers", "Houston Rockets"],
+    ["San Antonio Spurs", "Portland Trail Blazers"],
+    ["Minnesota Timberwolves", "Denver Nuggets"],
+  ],
+  East: [
+    ["Detroit Pistons", "Orlando Magic"],
+    ["Cleveland Cavaliers", "Toronto Raptors"],
+    ["Boston Celtics", "Philadelphia 76ers"],
+    ["New York Knicks", "Atlanta Hawks"],
+  ],
+};
+
+function hardcodedR1Slot(s: BracketSeries, conf: Conference): number | null {
+  const list = R1_LAYOUT[conf];
+  for (let i = 0; i < list.length; i++) {
+    const [a, b] = list[i];
+    if (
+      (s.teamA === a && s.teamB === b) ||
+      (s.teamA === b && s.teamB === a)
+    ) {
+      return i;
+    }
+  }
+  return null;
+}
+
 export function buildBracket(series: BracketSeries[]): BracketData {
   const data: BracketData = {
     R1: { east: emptySlots(R1_SLOTS), west: emptySlots(R1_SLOTS) },
@@ -89,13 +136,27 @@ export function buildBracket(series: BracketSeries[]): BracketData {
     byRound[s.round][conf].push(s);
   }
 
-  // R1: fill slots 0..3 in createdAt order. Cap at 4 so the bracket
-  // geometry stays consistent if the admin somehow over-creates.
+  // R1: place each series in its hardcoded R1_LAYOUT slot when the
+  // matchup is recognized. Anything left over (tests, future seasons
+  // before R1_LAYOUT is updated) falls back to the next free slot in
+  // createdAt order.
   for (const conf of CONFERENCES) {
     const slots = sideOf(data.R1, conf);
-    byRound.R1[conf].slice(0, R1_SLOTS).forEach((s, i) => {
-      slots[i] = s;
-    });
+    const unplaced: BracketSeries[] = [];
+    for (const s of byRound.R1[conf]) {
+      const slot = hardcodedR1Slot(s, conf);
+      if (slot !== null && slots[slot] === null) {
+        slots[slot] = s;
+      } else {
+        unplaced.push(s);
+      }
+    }
+    for (const s of unplaced) {
+      const free = slots.findIndex((x) => x === null);
+      if (free !== -1) slots[free] = s;
+      // else: more R1 series than slots — silently drop the overflow
+      // to keep the bracket geometry consistent.
+    }
   }
 
   // R2: place each series in the "pair" slot derived from its parents'

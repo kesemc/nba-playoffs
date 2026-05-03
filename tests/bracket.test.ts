@@ -111,6 +111,55 @@ describe("buildBracket", () => {
     expect(b.F).toHaveLength(1);
   });
 
+  describe("2026 R1 layout (hardcoded vertical order)", () => {
+    it("places West R1 in OKC / Lakers / Spurs / Wolves order regardless of createdAt", () => {
+      // Admin creates them out of order; layout should still come out right.
+      const b = buildBracket([
+        makeSeries("w-spurs", "R1", "San Antonio Spurs", "Portland Trail Blazers", 0),
+        makeSeries("w-okc", "R1", "Oklahoma City Thunder", "Phoenix Suns", 1),
+        makeSeries("w-wolves", "R1", "Minnesota Timberwolves", "Denver Nuggets", 2),
+        makeSeries("w-lakers", "R1", "Los Angeles Lakers", "Houston Rockets", 3),
+      ]);
+      expect(ids(b.R1.west)).toEqual(["w-okc", "w-lakers", "w-spurs", "w-wolves"]);
+    });
+
+    it("places East R1 in Pistons / Cavs / Celtics / Knicks order", () => {
+      const b = buildBracket([
+        makeSeries("e-knicks", "R1", "New York Knicks", "Atlanta Hawks", 0),
+        makeSeries("e-cavs", "R1", "Cleveland Cavaliers", "Toronto Raptors", 1),
+        makeSeries("e-pistons", "R1", "Detroit Pistons", "Orlando Magic", 2),
+        makeSeries("e-celtics", "R1", "Boston Celtics", "Philadelphia 76ers", 3),
+      ]);
+      expect(ids(b.R1.east)).toEqual([
+        "e-pistons",
+        "e-cavs",
+        "e-celtics",
+        "e-knicks",
+      ]);
+    });
+
+    it("matches teams in either teamA/teamB order", () => {
+      const b = buildBracket([
+        // Teams swapped — admin entered Suns first, Thunder second.
+        makeSeries("w-okc", "R1", "Phoenix Suns", "Oklahoma City Thunder", 0),
+      ]);
+      expect(b.R1.west[0]?.id).toBe("w-okc");
+    });
+
+    it("produces the user's expected R2 layout for the 2026 East", () => {
+      const b = buildBracket([
+        makeSeries("e1", "R1", "Detroit Pistons", "Orlando Magic", 0),
+        makeSeries("e2", "R1", "Cleveland Cavaliers", "Toronto Raptors", 1),
+        makeSeries("e3", "R1", "Boston Celtics", "Philadelphia 76ers", 2),
+        makeSeries("e4", "R1", "New York Knicks", "Atlanta Hawks", 3),
+        // Knicks beat Hawks (R1 slot 3), 76ers beat Celtics (R1 slot 2).
+        makeSeries("r2-knicks-philly", "R2", "New York Knicks", "Philadelphia 76ers", 100),
+      ]);
+      // Bottom half — paired with the Boston/Philly + Knicks/Hawks lines.
+      expect(ids(b.R2.east)).toEqual([null, "r2-knicks-philly"]);
+    });
+  });
+
   // The visual bracket pairs R1 slots 0+1 → R2 slot 0 and R1 slots 2+3 →
   // R2 slot 1. Before this fix, R2 placement was naive createdAt order,
   // so a single R2 series whose parents were in R1 slots 2-3 still
